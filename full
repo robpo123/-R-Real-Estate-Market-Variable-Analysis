@@ -1,0 +1,112 @@
+#Importing packages to R
+install.packages("tidyverse")
+install.packages("ggplot2")
+install.packages("googledrive")
+install.packages("dplyr")
+install.packages("tidyr")
+
+#Calling their functions within the library
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+#Allowing googledrive to be accessed for the CSV File
+library(googledrive)
+drive_auth()
+
+#Initializing CSV file into the Code
+file <- drive_find("Real_Estate_Sales_2001-2021_GL.csv")
+drive_download(file$id, path = "Real_Estate_Sales_2001-2021_GL.csv")
+data <- read.csv("Real_Estate_Sales_2001-2021_GL.csv")
+
+#The reason I chose this data set is because of my interest within the Real Estate market as of late because of the numerous benefits of owning property.
+#These benefits include appreciation, leverage of having a diverse portfolio, and the possibility of cash flow within rentals. With the way the economy has been headed it seems as if the time to buy property is soon if history was to repeat itself.
+#Q: Which correlation between sales ratio would be the strongest, Property Type, Non-Use Code, or Location?
+
+#Identifying variables found within the dataset
+names(data)
+
+#Within the CSV, we will be using the variables Sales.Ratio, Residental.Type, Non.Use.Code, and Location.
+#With that data we will be performing correlation types to find which factor correlates the strongest with the dependent variable, being Sales.Ratio
+#The reason Sales.Ratio matters is because it displays the relationship between the list price of the house and what the owner had paid for it.
+#This is important because it shows clear direction in the real estate business and how much the mark-up is.
+
+#Turns categorial variables into factors to allow them to be cor tested Calculates correlation coefficients between the variables listed
+data$Property.Type <- factor(data$Property.Type)
+data$Location <- factor(data$Location)
+data$Non.Use.Code <- factor(data$Non.Use.Code)
+
+corlocation <- cor(data$Sales.Ratio, as.numeric(data$Location))
+cornonuse <- cor(data$Sales.Ratio, as.numeric(data$Non.Use.Code))
+corproperty <- cor(data$Sales.Ratio, as.numeric(data$Property.Type))
+
+#Print statements
+print(paste("Location Correlation:", corlocation))
+print(paste("Non-Use Code Correlation:", cornonuse))
+print(paste("Property Type Correlation:",corproperty))
+#[1] "Location Correlation: 0.00273897312717912"
+#[1] "Non-Use Code Correlation: 0.00787378489280302"
+#[1] "Property Type Correlation: -0.0027423264000436"
+
+#Since these values are all close to zero, it shows that there is not much correlation between the two variables. its important to understand that correlation coefficients do not display the relationship the variables may have with eachother.
+#A P-Value is also important to consider because it determines how significant the statistic actually is. It also allows for comparison between each in the same way we just did for the correlation coefficient.
+
+#Performs a correlation test on each variable as a factor
+#Correlation test for P-Values to be able to accept or deny the null hypothesis
+cor_test_location <- cor.test(data$Sales.Ratio, as.numeric(data$Location))
+cor_test_nonusecode <- cor.test(data$Sales.Ratio, as.numeric(data$Non.Use.Code))
+cor_test_property <- cor.test(data$Sales.Ratio, as.numeric(data$Property.Type))
+
+#Print statements
+print(paste("Location Correlation P-Value", cor_test_location$p.value))
+print(paste("NonUseCode Correlation P-Value", cor_test_nonusecode$p.value))
+print(paste("Property Correlation P-Value", cor_test_property$p.value))
+#[1] "Location Correlation P-Value 0.00492089236231586"
+#[1] "NonUseCode Correlation P-Value 6.25184234621282e-16"
+#[1] "Property Correlation P-Value 0.00486847196643756"
+
+#Based on this output, all these variables are statistically significant within their correlation to Sales.Ratio because they are under 0.05.
+#To explore the data deeper, a scatter plot will be shown on the relationship between the data for two variables for visual comparison.
+#This is because location is incredibly unique for each data point and would not be a useful indicator to be shown in a visual format
+#Data is not cleaned, Subsample is not an effective display of correlation
+
+#Creates scatter plot matrix using the dependent variable as Sales.Ratio
+#Subsets data to be able to be displayed within a chart
+#Find data dimensions to be able to create folds
+data_dimensions <- dim(data)
+print(data_dimensions[1])
+
+# Scatter plot for Property.Type
+scatter_plot_property_subsample <- data %>%
+  sample_n(size = 210,832) %>%
+  ggplot(aes(x = Property.Type, y = Sales.Ratio, color = Property.Type)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  theme(legend.position = "left") +
+  labs(x = "Property Type", y = "Sales Ratio", color = "Property Type")
+
+# Scatter plot for Non.Use.Code
+scatter_plot_nonusecode_subsample <- data %>%
+  sample_n(size = 210,832) %>%
+  ggplot(aes(x = Non.Use.Code, y = Sales.Ratio, color = Non.Use.Code)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  theme(legend.position = "left") +
+  labs(x = "Non Use Code", y = "Sales Ratio", color = "Non Use Code")
+
+# Print
+print(scatter_plot_property_subsample)
+print(scatter_plot_nonusecode_subsample)
+
+#As shown by the data, the correlation is weak from a visual standpoint as well, showing that these are not the factors that are changing sale ratio. Within this example we used roughly 20% of the total data.
+#This data was collected by a federal organization that reported all sales of property that were above 2000 dollars.
+#To better my research and further find a correlation between the data, it would be more useful to include other types of variables as I believe there would be stronger correlation tests across multiple different types.
+#I believe the sales ratio would be much better explained by the attribution of all variables set within the data set.
+#Another limitation that I found was that the location variable was unable to be tested because of how many different individual locations there were.
+#This is why the variable isnt charted because it has too many Individual values.
+#That being said, it is puzzling how these factors have such little to do with the sales ratio as most homeowners look for these common factors when searching to purchase a home.
+#Surprisingly, these dont attribute to the sales ratio which ergo a deeper reason is behind the higher cost of sales ratio within the years of 2001-2021.
+#What could be the strongest correlation variable within this data set that would explain that? Are there other reasons for the sales ratio rising in more recent years?
+#Datasets that are more indepth as to the financial aspect of houses would be better suited here. Its important to understand the data presented is very general and broad which is why the variables have a poor time describing the data and showing correlation.
